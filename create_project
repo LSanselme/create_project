@@ -1,0 +1,71 @@
+#!/bin/bash
+# $ create_project MYPROJECT 
+# should return a directory that looks like
+
+#   MYPROJECT/
+#   ├── bin
+#   ├── cache
+#   ├── cleanup
+#   ├── DATA
+#   ├── docs
+#   ├── MYPROJECT
+#   │   └── __init__.py
+#   ├── requirements.txt
+#   ├── results
+#   ├── setup.py
+#   ├── tests
+#   │   ├── __init__.py
+#   │   └── MYPROJECT_tests.py
+#   ├── .git
+#   │   └── ...
+#   └── .gitignore
+
+
+mkdir ${1}
+
+cd ${1}
+
+mkdir bin cache DATA docs ${1} results tests
+
+echo '#!/bin/bash
+
+function cleanup()
+{
+    find ${1} -name "*pyc" -exec rm {} \;
+    find ${1} -name "*~" -exec rm {} \;
+}
+
+cleanup ./' > cleanup
+
+chmod 755 cleanup
+
+touch ${1}/__init__.py
+
+pip freeze > requirements.txt
+
+echo '#!/home/lilian/anaconda/bin python 
+raise NotImplementedError("Setup not implemented yet.")' > setup.py
+
+touch tests/__init__.py
+
+echo 'from nose.tools import *
+import '> tests/${1}_tests.py
+echo ${1} >> tests/${1}_tests.py
+echo '
+def setup():
+    print "SETUP!"
+
+def teardown():
+    print "TEAR DOWN!"
+
+def test_basic():
+    print "I RAN!"' >> tests/${1}_tests.py
+
+echo '*~
+*.pyc
+*.png
+results/*.csv
+*.pickle' > .gitignore
+
+git init
+
